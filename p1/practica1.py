@@ -4,6 +4,7 @@
     como argumento y los vuelca a traza nueva con tiempo actual
 
     Autor: Javier Ramos <javier.ramos@uam.es>
+	Alumnos: Sergio Hidalgo y Mario Iribas
     2020 EPS-UAM
 '''
 
@@ -29,6 +30,15 @@ def signal_handler(nsignal,frame):
 	if handle:
 		pcap_breakloop(handle)
 		
+def analizar_traza(us,header,data):
+	global num_paquete, pdumper
+	logging.info('Nuevo paquete de {} bytes capturado en el timestamp UNIX {}.{}'.format(header.len,header.ts.tv_sec,header.ts.tv_sec))
+	num_paquete += 1
+	
+	#imprimir los N primeros bytes
+	print (binascii.hexlify(data[:args.nbytes]))
+	
+
 
 def procesa_paquete(us,header,data):
 	global num_paquete, pdumper
@@ -42,13 +52,12 @@ def procesa_paquete(us,header,data):
 	descr = pcap_open_dead(DLT_EN10MB, ETH_FRAME_MAX)
 	
 	#la traza debe ser solo cndo empieza o cada vez q pasa un segundo?
-	pdumper = pcap_dump_open(descr, 'captura.'+ str(args.interface) + '.' + str(int((datetime.now()).timestamp())) +'.pcap')
+	#pdumper = pcap_dump_open(descr, 'captura.'+ str(args.interface) + '.' + str(header.ts.tv_sec) +'.pcap')
+	pdumper = pcap_dump_open(descr, 'captura.'+ str(args.interface) + '.' + str(TIME_OFFSET) +'.pcap')
 	
 	pcap_dump(pdumper, header, data)
 
-
 	pcap_close(descr)
-	pcap_dump_close(pdumper)
 
 	
 if __name__ == "__main__":
@@ -77,19 +86,20 @@ if __name__ == "__main__":
 	handle = None
 	pdumper = None
 	descr = None
-	
+	ret = -1
 	
 	#abrir la interfaz especificada para captura o la traza
-	handle = pcap_open_live(args.interface, ETH_FRAME_MAX, NO_PROMISC, TO_MS, errbuf)
+	if args.interface != False:
+		handle = pcap_open_live(args.interface, ETH_FRAME_MAX, NO_PROMISC, TO_MS, errbuf)
 
 
 	#abrir un dumper para volcar el tráfico (si se ha especificado interfaz) 
 	if args.tracefile != False:
-		descr = pcap_open_dead(DLT_EN10MB, ETH_FRAME_MAX)
-		pdumper = pcap_dump_open(descr, args.tracefile)
+		handle = pcap_open_offline(args.tracefile, errbuf)
+		ret = pcap_loop(handle,50,analizar_traza,None)
+	else:
+		ret = pcap_loop(handle,50,procesa_paquete,None)
 	
-	
-	ret = pcap_loop(handle,50,procesa_paquete,None)
 	if ret == -1:
 		logging.error('Error al capturar un paquete')
 	elif ret == -2:
@@ -97,10 +107,12 @@ if __name__ == "__main__":
 	elif ret == 0:
 		logging.debug('No mas paquetes o limite superado')
 	logging.info('{} paquetes procesados'.format(num_paquete))
-	#TODO si se ha creado un dumper cerrarlo
 	
-	if args.tracefile != False:
-		pcap_close(descr)
+	#si se ha creado un dumper cerrarlo
+	if pdumper != None:
 		pcap_dump_close(pdumper)
 	
+	
+
+
 	sys.exit(1)
