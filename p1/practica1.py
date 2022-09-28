@@ -36,12 +36,20 @@ def procesa_paquete(us,header,data):
 	logging.info('Nuevo paquete de {} bytes capturado en el timestamp UNIX {}.{}'.format(header.len,header.ts.tv_sec,header.ts.tv_sec))
 	num_paquete += 1
 	
+
 	#imprimir los N primeros bytes
-	print (binascii.hexlify(data[:args.nbytes]))
+	my_data_str = str( binascii.hexlify(data[:args.nbytes]))
+
+	i = 0
+
+	while i < int(args.nbytes):
+		print(my_data_str[i] + ' ', end = '')
+		i+=1
+
+	print("' ")
 	
 	#Escribir el tráfico al fichero de captura con el offset temporal
 	
-	#la traza debe ser solo cndo empieza o cada vez q pasa un segundo?
 	if args.interface != False:
 		pcap_dump(pdumper, header, data)
 
@@ -86,6 +94,7 @@ if __name__ == "__main__":
 	else:
 		descr = pcap_open_dead(DLT_EN10MB, ETH_FRAME_MAX)
 		pdumper = pcap_dump_open(descr, 'captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap')
+
 
 	ret = pcap_loop(handle,50,procesa_paquete,None)
 	
