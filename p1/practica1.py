@@ -8,6 +8,7 @@
     2020 EPS-UAM
 '''
 
+from ast import If
 from rc1_pcap import *
 import sys
 import binascii
@@ -78,12 +79,13 @@ if __name__ == "__main__":
 	if args.interface != False:
 		handle = pcap_open_live(args.interface, ETH_FRAME_MAX, NO_PROMISC, TO_MS, errbuf)
 
-	descr = pcap_open_dead(DLT_EN10MB, ETH_FRAME_MAX)
-	pdumper = pcap_dump_open(descr, 'captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap')
-
+		
 	#abrir un dumper para volcar el tráfico (si se ha especificado interfaz) 
 	if args.tracefile != False:
 		handle = pcap_open_offline(args.tracefile, errbuf)
+	else:
+		descr = pcap_open_dead(DLT_EN10MB, ETH_FRAME_MAX)
+		pdumper = pcap_dump_open(descr, 'captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap')
 
 	ret = pcap_loop(handle,50,procesa_paquete,None)
 	
