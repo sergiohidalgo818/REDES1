@@ -47,6 +47,8 @@ def procesa_paquete(us,header,data):
 		i+=1
 
 	print("' ")
+ 
+	header.ts.tv_sec += 1800
 	
 	#Escribir el tráfico al fichero de captura con el offset temporal
 	
