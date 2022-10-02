@@ -42,16 +42,13 @@ def procesa_paquete(us,header,data):
 
 	i = 0
 
-	while i < int(args.nbytes):
-		print(my_data_str[i], end = '')
-		if i %2 != 0:
-			print(' ', end = '')
-		
+	while i <= int(args.nbytes)+1:
+		print(my_data_str[i] + ' ', end = '')
 		i+=1
 
 	print("' ")
  
-	header.ts.tv_sec += TIME_OFFSET
+	header.ts.tv_sec += 1800
 	
 	#Escribir el tráfico al fichero de captura con el offset temporal
 	
