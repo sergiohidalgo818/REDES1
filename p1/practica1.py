@@ -38,12 +38,14 @@ def procesa_paquete(us,header,data):
 	
 
 	#imprimir los N primeros bytes
-	my_data_str = str( binascii.hexlify(data[:args.nbytes]))
+	my_data_str = str(binascii.hexlify(data[:args.nbytes]))
 
 	i = 0
 
 	while i <= int(args.nbytes)+1:
-		print(my_data_str[i] + ' ', end = '')
+		print(my_data_str[i], end = '')
+		if i %2 != 0:
+			print(' ', end = '')
 		i+=1
 
 	print("' ")
