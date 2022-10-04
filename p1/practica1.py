@@ -51,8 +51,10 @@ def procesa_paquete(us,header,data):
 
 	print("' ")
  
-	#Escribir el tráfico al fichero de captura con el offset temporal
 	
+	#Escribir el tráfico al fichero de captura con el offset temporal
+	header.tv.sec += TIME_OFFSET
+
 	if args.interface != False:
 		pcap_dump(pdumper, header, data)
 
@@ -97,14 +99,11 @@ if __name__ == "__main__":
 	else:
 		descr = pcap_open_dead(DLT_EN10MB, ETH_FRAME_MAX)
 		name = 'captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap'
-		pdumper = pcap_dump_open(descr, )
+		pdumper = pcap_dump_open(descr, name)
 
 
 	ret = pcap_loop(handle,50,procesa_paquete,None)
-	
-	if args.interface != False:
-		os.system('editcap -t ' + str(TIME_OFFSET) + ' ' + name + ' ' + name)
-	
+
 	if ret == -1:
 		logging.error('Error al capturar un paquete')
 	elif ret == -2:
