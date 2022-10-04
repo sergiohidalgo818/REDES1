@@ -42,7 +42,7 @@ def procesa_paquete(us,header,data):
 
 	i = 0
 
-	while i < (int(args.nbytes)*2) and i < (int(header.len)*2):
+	while i <= (int(args.nbytes)*2)+1 and i < (int(header.len)*2):
 		print(my_data_str[i], end = '')
 		if i %2 != 0:
 			print(' ', end = '')
