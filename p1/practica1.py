@@ -50,7 +50,6 @@ def procesa_paquete(us,header,data):
 
 	print("' ")
  
-	header.ts.tv_sec += TIME_OFFSET
 	
 	#Escribir el tráfico al fichero de captura con el offset temporal
 	
@@ -99,6 +98,7 @@ if __name__ == "__main__":
 		descr = pcap_open_dead(DLT_EN10MB, ETH_FRAME_MAX)
 		pdumper = pcap_dump_open(descr, 'captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap')
 
+	handle.ts.tv_sec += TIME_OFFSET
 
 	ret = pcap_loop(handle,50,procesa_paquete,None)
 	
