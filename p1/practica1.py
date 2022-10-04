@@ -102,7 +102,7 @@ if __name__ == "__main__":
 	ret = pcap_loop(handle,50,procesa_paquete,None)
 	
 	if args.interface != False:
-		os.system('editcap -t' + str(TIME_OFFSET) + ' captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap' ' captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap')
+		os.system('editcap -t ' + str(TIME_OFFSET) + ' captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap' ' captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap')
 	
 	if ret == -1:
 		logging.error('Error al capturar un paquete')
