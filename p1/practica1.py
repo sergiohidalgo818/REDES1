@@ -53,7 +53,7 @@ def procesa_paquete(us,header,data):
  
 	
 	#Escribir el tráfico al fichero de captura con el offset temporal
-	header.tv.sec += TIME_OFFSET
+	header.ts.tv_sec += TIME_OFFSET
 
 	if args.interface != False:
 		pcap_dump(pdumper, header, data)
