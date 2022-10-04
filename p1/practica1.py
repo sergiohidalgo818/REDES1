@@ -96,13 +96,14 @@ if __name__ == "__main__":
 		handle = pcap_open_offline(args.tracefile, errbuf)
 	else:
 		descr = pcap_open_dead(DLT_EN10MB, ETH_FRAME_MAX)
-		pdumper = pcap_dump_open(descr, 'captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap')
+		name = 'captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap'
+		pdumper = pcap_dump_open(descr, )
 
 
 	ret = pcap_loop(handle,50,procesa_paquete,None)
 	
 	if args.interface != False:
-		os.system('editcap -t ' + str(TIME_OFFSET) + ' captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap' ' captura.' + str(args.interface) + '.' + str(int(time.time())) +'.pcap')
+		os.system('editcap -t ' + str(TIME_OFFSET) + ' ' + name + ' ' + name)
 	
 	if ret == -1:
 		logging.error('Error al capturar un paquete')
