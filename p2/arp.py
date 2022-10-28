@@ -219,7 +219,20 @@ def ARPResolution(ip:int) -> bytes:
                 -resolvedMAC: contiene la dirección MAC resuelta (en caso de que awaitingResponse) sea False.
             Como estas variables globales se leen y escriben concurrentemente deben ser protegidas con un Lock
     '''
+
     global requestedIP,awaitingResponse,resolvedMAC
+
+
+    with cacheLock:
+        for k in cache:
+            if k in cache:
+                if ip in cache:
+                    return k
+
+    arpR = createARPRequest(ip)
+
+
+
     logging.debug('Función no implementada')
     #TODO implementar aquí
     return None

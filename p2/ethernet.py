@@ -6,6 +6,8 @@
 '''
 
 from typing_extensions import dataclass_transform
+
+from sqlalchemy import false
 from rc1_pcap import *
 import logging
 import socket
@@ -173,8 +175,6 @@ def startEthernetLevel(interface:str) -> int:
     errbuf = bytearray()
 
     if levelInitialized == False:
-        if (arp.initARP(interface) == -1):
-            return -1
         macAddress = getHwAddr(interface)
         handle = pcap_open_live(interface, ETH_FRAME_MAX, 1, TO_MS, errbuf)
     else:
@@ -201,7 +201,15 @@ def stopEthernetLevel()->int:
         Argumentos: Ninguno
         Retorno: 0 si todo es correcto y -1 en otro caso
     '''
-    logging.debug('Función no implementada')
+    #logging.debug('Función no implementada')
+    if ((handle == None) or (levelInitialized == False) or ((recvThread.is_alive()) == False)):
+        return -1
+ 
+    recvThread.stop()
+
+    pcap_close(handle)
+
+    levelInitialized = False
     return 0
     
 def sendEthernetFrame(data:bytes,length:int,etherType:int,dstMac:bytes) -> int:
@@ -222,9 +230,19 @@ def sendEthernetFrame(data:bytes,length:int,etherType:int,dstMac:bytes) -> int:
             -dstMac: Dirección MAC destino a incluir en la trama que se enviará
         Retorno: 0 si todo es correcto, -1 en otro caso
     '''
+    #logging.debug('Función no implementada')
     global macAddress,handle, levelInitialized
 
+    if (levelInitialized == False) or (length < ETH_FRAME_MIN) or (length > ETH_FRAME_MAX):
+        return -1
+
+    frame = bytes(dstMac) + bytes(macAddress)  + bytes(etherType)
     
-    logging.debug('Función no implementada')
+    payload = bytes(data)
+    trama = frame + payload
+
+    if (pcap_inject(handle, trama, length) == -1):
+        return -1
+    return 0
     
         
