@@ -148,6 +148,7 @@ def createARPReply(IP:int ,MAC:bytes) -> bytes:
     '''
     global myMAC,myIP
     frame = bytes()
+    
     logging.debug('Función no implementada')
     #TODO implementar aqui
     return frame
@@ -172,11 +173,28 @@ def process_arp_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes,srcMac:by
             -srcMac: MAC origen de la trama Ethernet que se ha recibido
         Retorno: Ninguno
     '''
-    logging.debug('Función no implementada')
+    #logging.debug('Función no implementada')
     #TODO implementar aquí
+    if (arpInitialized == True):
+        header_aux = bytearray(header)
+        comon = bytearray()
+        i=0
+        while i < 6:
+            comon.append(header_aux[i])
+            i+=1
+        
+        #comprobar que common es correcto
+        opcode_arp = bytearray()
+        while i < 8:
+            opcode_arp.append(header_aux[i])
+            i+=1
 
+        if (opcode_arp.hex() == 0x0001):
+            processARPRequest(data, srcMac)
+        elif(opcode_arp.hex() == 0x0002):
+            processARPReply(data, srcMac)
 
-
+        
 def initARP(interface:str) -> int:
     '''
         Nombre: initARP
@@ -189,9 +207,11 @@ def initARP(interface:str) -> int:
     global myIP,myMAC,arpInitialized
     #logging.debug('Función no implementada')
     #TODO implementar aquí
+    
+    registerCallback(process_arp_frame,0x0806)
+
     myIP = getIP(interface)
 
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     myMAC = macAddress
     
     if (ARPResolution(myIP) != None) : 

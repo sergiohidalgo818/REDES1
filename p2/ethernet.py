@@ -236,13 +236,17 @@ def sendEthernetFrame(data:bytes,length:int,etherType:int,dstMac:bytes) -> int:
     if (levelInitialized == False) or (length < ETH_FRAME_MIN) or (length > ETH_FRAME_MAX):
         return -1
 
-    frame = bytes(dstMac) + bytes(macAddress)  + bytes(etherType)
+    frame = bytearray(dstMac)
     
-    payload = bytes(data)
-    trama = frame + payload
+    frame.append(bytes(macAddress))
+    frame.append(bytes(etherType))
 
-    if (pcap_inject(handle, trama, length) == -1):
+    trama = bytearray(frame)
+    trama.append(bytes(data))
+
+    if (pcap_inject(handle, bytes(trama), length) == -1):
         return -1
+    
     return 0
     
         
