@@ -192,16 +192,10 @@ def initARP(interface:str) -> int:
     myIP = getIP(interface)
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    mac = fcntl.ioctl(
-        s.fileno(), 
-        0x8927,  
-        struct.pack('256s', (interface[:15].encode('utf-8'))))
-    s.close()
-
-    myMac = ':'.join(['%02x' % ord(char) for char in mac[18:24]])
+    myMAC = macAddress
     
-    
-
+    if (ARPResolution(myIP) != None) : 
+        return -1
     arpInitialized =True
 
     return 0

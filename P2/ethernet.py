@@ -14,7 +14,6 @@ from binascii import hexlify
 import struct 
 import threading 
 import arp
-from arp import myMAC
 
 #Tamaño máximo de una trama Ethernet (para las prácticas)
 ETH_FRAME_MAX = 1514
@@ -176,7 +175,7 @@ def startEthernetLevel(interface:str) -> int:
     if levelInitialized == False:
         if (arp.initARP(interface) == -1):
             return -1
-        macAddress = myMAC
+        macAddress = getHwAddr(interface)
         handle = pcap_open_live(interface, ETH_FRAME_MAX, 1, TO_MS, errbuf)
     else:
         return -1
