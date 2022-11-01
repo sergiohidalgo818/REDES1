@@ -5,9 +5,6 @@
     2019 EPS-UAM
 '''
 
-from typing_extensions import dataclass_transform
-
-from sqlalchemy import false
 from rc1_pcap import *
 import logging
 import socket
@@ -15,7 +12,6 @@ import struct
 from binascii import hexlify
 import struct 
 import threading 
-import arp
 
 #Tamaño máximo de una trama Ethernet (para las prácticas)
 ETH_FRAME_MAX = 1514
@@ -68,23 +64,25 @@ def process_Ethernet_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes) -> 
     '''
     # logging.debug('Trama nueva. Función no implementada')
     #TODO: Implementar aquí el código que procesa una trama Ethernet en recepción
-
-    ETH_DEST = data[1:6] 
-    ETH_ORIG = data[6:12]
-    ETH_TYPE= data[12:14]
-
-
-    if ETH_DEST != macAddress and ETH_DEST != broadcastAddr:
-        return
-
-    ETH_R = struct.unpack('h',ETH_TYPE)
+    global macAddress
     
-    if not ETH_R in upperProtos:
+    data = bytes(data)
+    
+    eth_dest = data[:6]
+    eth_org = data[6:12]
+    eth_type = data[12:14]
+    
+    if eth_dest != macAddress and eth_dest != broadcastAddr:
         return
-
-
-    (upperProtos[ETH_R])(us, header, data[14:], ETH_ORIG)
-
+    
+    eth_r = struct.unpack('h', eth_type)
+    
+    if not eth_r in upperProtos:
+        return
+    
+    f = upperProtos[eth_r]
+    
+    f(us, header, data[14:], eth_org)
     
 
 def process_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes) -> None:
@@ -169,24 +167,27 @@ def startEthernetLevel(interface:str) -> int:
     '''
     global macAddress,handle,levelInitialized,recvThread
     handle = None
+    levelInitialized = False
     #logging.debug('Función no implementada')
     #TODO: implementar aquí la inicialización de la interfaz y de las variables globales
     errbuf = bytearray()
+    
 
     if interface is None:
         return -1
 
-    if levelInitialized == False:
-        macAddress = getHwAddr(interface)
-        handle = pcap_open_live(interface, ETH_FRAME_MAX, PROMISC, TO_MS, errbuf)
-    else:
+    if levelInitialized:
         return -1
-    #Una vez hemos abierto la interfaz para captura y hemos inicializado las variables globales (macAddress, handle y levelInitialized) arrancamos
-    #el hilo de recepción
+    
+    macAddress = getHwAddr(interface)
+    handle = pcap_open_live(interface, ETH_FRAME_MAX, PROMISC, TO_MS, errbuf)
+    
+    if not handle:
+        return -1
+
     recvThread = rxThread()
     recvThread.daemon = True
     recvThread.start()
-    recvThread.run()
 
     levelInitialized = True
     return 0
@@ -204,7 +205,7 @@ def stopEthernetLevel()->int:
         Retorno: 0 si todo es correcto y -1 en otro caso
     '''
     #logging.debug('Función no implementada')
-    if ((handle == None) or (levelInitialized == False) or ((recvThread.is_alive()) == False)):
+    if not handle:
         return -1
  
     recvThread.stop()
@@ -235,25 +236,23 @@ def sendEthernetFrame(data:bytes,length:int,etherType:int,dstMac:bytes) -> int:
     #logging.debug('Función no implementada')
     global macAddress,handle, levelInitialized
 
-    length = length + 14
 
 
-    if (levelInitialized == False) or (length > ETH_FRAME_MAX):
-        return -1
-
-    frame = bytearray(dstMac)
+    frame = dstMac
+    frame += macAddress
+    frame += etherType
+    frame += data
     
-    frame.append(bytes(macAddress))
-    frame.append(bytes(etherType))
+    length += 14
 
-    frame.append(bytes(data))
+    if length < ETH_FRAME_MIN:
+        frame += bytes([0]*(ETH_FRAME_MIN - length))
+        length = ETH_FRAME_MIN
 
-    if (length < ETH_FRAME_MIN):
-        frame.append(bytes([0]*(ETH_FRAME_MIN-length)))
-
-    if (pcap_inject(handle, bytes(frame), length) == -1):
+    if length > ETH_FRAME_MAX:
         return -1
+
+    pcap_inject(handle, bytes(frame), length)
+
     
     return 0
-    
-        

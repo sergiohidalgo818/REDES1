@@ -96,22 +96,28 @@ def processARPRequest(data:bytes,MAC:bytes)->None:
 
 
 
-    MAC_ORG = data[2:8]
-    if MAC_ORG != MAC:
+    mac_org = data[2:8]
+    if mac_org != MAC:
         return
 
-    IP_ORG = data[8:12]
+    ip_org = data[8:12]
     
-    IP_DEST = data[18:22]
+    ip_dest = data[18:22]
 
-    IP_R = struct.pack('!I', myIP)
+    ip_r = struct.pack('!I', myIP)
+    
+    print(data)
+    print(ip_org)
+    print(ip_r)
 
-    if IP_DEST != IP_R:
+    if ip_dest != ip_r:
         return
 
-    frame = createARPReply(IP_ORG, MAC_ORG)
+    frame = createARPReply(ip_org, mac_org)
 
-    sendEthernetFrame(frame, len(frame), bytes([0x08,0x06]), MAC_ORG)
+    sendEthernetFrame(frame, len(frame), bytes([0x08,0x06]), mac_org)
+    
+    return
 
 
 def processARPReply(data:bytes,MAC:bytes)->None:
@@ -141,30 +147,37 @@ def processARPReply(data:bytes,MAC:bytes)->None:
     #logging.debug('Función no implentada')    
     #TODO implementar aquí
         
-    MAC_ORG = data[2:8]
-    if MAC_ORG != MAC:
+    mac_org = data[2:8]
+    if mac_org != MAC:
         return
 
-    IP_ORG = data[8:12]
+    ip_org = data[8:12]
 
-    MAC_DEST = data[12:18]
+    mac_dest = data[12:18]
     
-    IP_DEST = data[18:22]
+    ip_dest = data[18:22]
 
-    IP_R = struct.pack('!I', myIP)
+    ip_r = struct.pack('!I', myIP)
 
-    if IP_DEST != IP_R:
+    if ip_dest != ip_r:
+        print("ERROR1")
+        return
+
+    if ip_org != struct.pack('!I', requestedIP):
+        print("ERROR2")
         return
 
     with globalLock:
-        resolvedMAC = MAC_ORG
+        resolvedMAC = mac_org
 
     with cacheLock:
-        cache = {requestedIP: MAC_ORG}
+        cache = {requestedIP: mac_org}
 
     with globalLock:
         requestedIP = None
         awaitingResponse = False
+        
+    return
 
 
 def createARPRequest(ip:int) -> bytes:
@@ -176,22 +189,15 @@ def createARPRequest(ip:int) -> bytes:
         Retorno: Bytes con el contenido de la trama de petición ARP
     '''
     global myMAC,myIP
-    frame = bytes()
-    frame_aux = bytearray()
-    #logging.debug('Función no implementada')
-    #TODO implementar aqui
-
-    frame_aux.append(ARPHeader)
-    frame_aux.append(bytes([0x00,0x01]) )
-    frame_aux.append(myMAC)
-    frame_aux.append(bytes(struct.pack('!I', myIP)))
-    frame_aux.append(broadcastAddr)
-    frame_aux.append(bytes(struct.pack('!I', ip)))
-
-    frame = bytes(frame_aux)
+    
+    frame = ARPHeader
+    frame += bytes([0x00,0x01])
+    frame += myMAC
+    frame += bytes(struct.pack('!I', myIP))
+    frame += broadcastAddr
+    frame += bytes(struct.pack('!I', ip))
 
     return frame
-
     
 def createARPReply(IP:int ,MAC:bytes) -> bytes:
     '''
@@ -203,20 +209,14 @@ def createARPReply(IP:int ,MAC:bytes) -> bytes:
         Retorno: Bytes con el contenido de la trama de petición ARP
     '''
     global myMAC,myIP
-    frame = bytes()
     
-    frame_aux = bytearray()
-    #logging.debug('Función no implementada')
-    #TODO implementar aqui
-
-    frame_aux.append(ARPHeader)
-    frame_aux.append(bytes([0x00,0x02]))
-    frame_aux.append(myMAC)
-    frame_aux.append(bytes(struct.pack('!I', myIP)))
-    frame_aux.append(MAC)
-    frame_aux.append(IP)
-
-    frame = bytes(frame_aux)
+    frame = ARPHeader
+    frame += bytes([0x00,0x02])
+    frame += myMAC
+    frame += bytes(struct.pack('!I', myIP))
+    frame += MAC
+    frame += IP
+    
     return frame
 
 
@@ -241,29 +241,25 @@ def process_arp_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes,srcMac:by
     '''
     #logging.debug('Función no implementada')
     #TODO implementar aquí
-    if (arpInitialized == True):
+    if not arpInitialized:
+        return
 
-        header_aux = bytearray(header)
-        comon = bytearray()
+    common = data[:6]
 
-        i=0
-        while i < 6:
-            comon.append(header_aux[i])
-            i+=1
-
-        #comprobar que common es correcto
-        if comon != ARPHeader:
-            return
+    if common != ARPHeader:
+        print("La cabecera common no es correcta")
+        return
         
-        opcode_arp = bytearray()
-        while i < 8:
-            opcode_arp.append(header_aux[i])
-            i+=1
+    opcode_arp = data[6:8]
 
-        if (opcode_arp.hex() == "0001"):
-            processARPRequest(data[6:], srcMac)
-        elif(opcode_arp.hex() == "0002"):
-            processARPReply(data[6:], srcMac)
+    if opcode_arp == bytes([0x00,0x01]):
+        processARPRequest(data[6:], srcMac)
+    elif opcode_arp == bytes([0x00,0x02]):
+        processARPReply(data[6:], srcMac)
+    else:
+        return
+    
+    return
 
         
 def initARP(interface:str) -> int:
@@ -283,12 +279,15 @@ def initARP(interface:str) -> int:
 
     myIP = getIP(interface)
 
-    myMAC = macAddress
+    myMAC = getHwAddr(interface)
     
-    if (ARPResolution(myIP) != None) : 
+    free_res = ARPResolution(myIP)
+    print(free_res)
+    if free_res:
         return -1
-    arpInitialized =True
-
+    
+    arpInitialized = True
+    
     return 0
 
 def ARPResolution(ip:int) -> bytes:
@@ -318,10 +317,8 @@ def ARPResolution(ip:int) -> bytes:
 
 
     with cacheLock:
-        for k in cache:
-            if k in cache:
-                if ip in cache:
-                    return k
+        if ip in cache:
+            return cache[ip]
 
     with globalLock:
         awaitingResponse = True
@@ -332,12 +329,15 @@ def ARPResolution(ip:int) -> bytes:
 
     i=0
 
+    
     while i < 3:
-        if awaitingResponse == True:
+        if awaitingResponse:
             sendEthernetFrame(arpR, len(arpR), bytes([0x08,0x06]), broadcastAddr)
+            print("Se busca la IP: " + str(ip))
             time.sleep(1)
             i+= 1
         else:
+            print("Se ha resuelto")
             return resolvedMAC
     
     return None
