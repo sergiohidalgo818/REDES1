@@ -1,0 +1,20 @@
+Mario García Iribas y Sergio Hidalgo Gamborino
+
+Recibir tramas Ethernet, realizar comprobaciones y llamar correctamente a la función de callback de nivel superior:
+- Realizado.
+Enviar tramas Ethernet  correctamente:
+- Realizado
+Enviar correctamente peticiones ARP:
+- Realizado
+Procesar correctamente peticiones ARP recibidas:
+- Realizado
+Enviar correctamente respuestas ARP:
+- Realizado
+Procesar correctamente respuestas ARP:
+- Realizado
+Manejo correcto de la caché ARP:
+- Realizado
+Uso correcto de Locks:
+- Realizado
+Realiza correctamente el ARP gratuito:
+- Realizado
