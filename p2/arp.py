@@ -160,11 +160,9 @@ def processARPReply(data:bytes,MAC:bytes)->None:
     ip_r = struct.pack('!I', myIP)
 
     if ip_dest != ip_r:
-        print("ERROR1")
         return
 
     if ip_org != struct.pack('!I', requestedIP):
-        print("ERROR2")
         return
 
     with globalLock:
