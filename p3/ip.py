@@ -149,7 +149,7 @@ def registerIPProtocol(callback,protocol):
     '''
 
 def initIP(interface,opts=None):
-    global myIP, MTU, netmask, defaultGW,ipOpts
+    global myIP, MTU, netmask, defaultGW, ipOpts, IPID
     '''
         Nombre: initIP
         Descripción: Esta función inicializará el nivel IP. Esta función debe realizar, al menos, las siguientes tareas:
@@ -167,6 +167,21 @@ def initIP(interface,opts=None):
             -opts: array de bytes con las opciones a nivel IP a incluir en los datagramas o None si no hay opciones a añadir
         Retorno: True o False en función de si se ha inicializado el nivel o no
     '''
+
+    if (initARP(interface) == -1):
+        return False
+    
+    myIP = getIP(interface)
+    MTU = getMTU(interface)
+    netmask = getNetmask(interface)
+    defaultGW = getDefaultGW(interface)
+
+    ipOpts = opts
+
+    registerCallback(process_IP_datagram, bytes([0x08,0x00]))
+
+    IPID +=  1 #TODO esto nose si es asi
+
 
 def sendIPDatagram(dstIP,data,protocol):
     global IPID
