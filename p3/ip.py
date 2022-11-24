@@ -180,7 +180,7 @@ def initIP(interface,opts=None):
 
     registerCallback(process_IP_datagram, bytes([0x08,0x00]))
 
-    IPID +=  1 #TODO esto nose si es asi
+    IPID = 0
 
 
 def sendIPDatagram(dstIP,data,protocol):

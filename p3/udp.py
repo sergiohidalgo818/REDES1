@@ -69,7 +69,6 @@ def sendUDPDatagram(data,dstPort,dstIP):
     '''
     udp_datagram = bytes()
 
-
 def initUDP():
     '''
         Nombre: initUDP
@@ -82,3 +81,5 @@ def initUDP():
         Retorno: Ninguno
           
     '''
+
+    registerIPProtocol(process_UDP_datagram, 1)

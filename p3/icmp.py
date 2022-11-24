@@ -93,3 +93,5 @@ def initICMP():
         Retorno: Ninguno
           
     '''
+
+    registerIPProtocol(process_ICMP_message, 1)
