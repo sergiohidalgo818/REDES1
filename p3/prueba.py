@@ -17,18 +17,16 @@ if __name__ == "__main__":
 
     udp_datagram += dstPort
 
-    print(udp_datagram)
 
 
     length = len(udp_datagram + data)
-    print(hex(length)[:15])
     
-    length = bytes(hex(length).encode())   
+    length = length.to_bytes(2, "big")  
     
-    print(str(length))
     
     udp_datagram += length
-    print(udp_datagram)
 
     udp_datagram += bytes([0x00, 0x00])
+    udp_datagram += data
+    print(udp_datagram)
 
