@@ -49,6 +49,7 @@ def process_UDP_datagram(us,header,data,srcIP):
     '''
 
 
+
 def sendUDPDatagram(data,dstPort,dstIP):
     '''
         Nombre: sendUDPDatagram
@@ -84,6 +85,7 @@ def sendUDPDatagram(data,dstPort,dstIP):
     udp_datagram += bytes([0x00, 0x00])
     udp_datagram += data
 
+    return sendIPDatagram(dstIP, udp_datagram, bytes([0x00, 0x11]))
 
 
 def initUDP():
