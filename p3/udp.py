@@ -50,7 +50,7 @@ def process_UDP_datagram(us,header,data,srcIP):
 
 
 def sendUDPDatagram(data,dstPort,dstIP):
-     '''
+    '''
         Nombre: sendUDPDatagram
         Descripción: Esta función construye un datagrama UDP y lo envía
         Esta función debe realizar, al menos, las siguientes tareas:
@@ -68,6 +68,20 @@ def sendUDPDatagram(data,dstPort,dstIP):
           
     '''
     udp_datagram = bytes()
+    srcPort = getUDPSourcePort()
+    udp_datagram = srcPort 
+
+    udp_datagram += dstPort
+
+    length = bytes(len(udp_datagram))
+
+    udp_datagram += length
+
+    udp_datagram += bytes([0x00, 0x00])
+
+    udp_datagram += bytes(data)
+
+
 
 def initUDP():
     '''
