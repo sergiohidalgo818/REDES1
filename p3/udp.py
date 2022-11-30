@@ -48,6 +48,15 @@ def process_UDP_datagram(us,header,data,srcIP):
           
     '''
 
+    srcPort = data[:15]
+    dstPort = data[16:31]
+    data_datagram = data[64:]
+
+    logging.debug("Puerto origen:", srcPort)
+    logging.debug("Puerto destino:", dstPort)
+    logging.debug("Puerto datos:", data_datagram)
+
+
 
 
 def sendUDPDatagram(data,dstPort,dstIP):
@@ -101,4 +110,4 @@ def initUDP():
           
     '''
 
-    registerIPProtocol(process_UDP_datagram, 1)
+    registerIPProtocol(process_UDP_datagram, bytes([0x00, 0x11]))
