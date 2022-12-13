@@ -277,11 +277,11 @@ def sendIPDatagram(dstIP,data,protocol):
 
     print("Enviando datagrama IP desde ")
 
-    print(':'.join(['{:02X}'.format(b) for b in iporg]))
+    print(':'.join(['{:02d}'.format(b) for b in iporg]))
 
     print("hasta ")
 
-    print(':'.join(['{:02X}'.format(b) for b in ipdst]))
+    print(':'.join(['{:02d}'.format(b) for b in ipdst]))
 
 
     if(dstIP & netmask == myIP & netmask):
