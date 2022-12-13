@@ -45,8 +45,24 @@ def process_ICMP_message(us,header,data,srcIp):
             -data: array de bytes con el conenido del mensaje ICMP
             -srcIP: dirección IP que ha enviado el datagrama actual.
         Retorno: Ninguno
-          
     '''
+
+    type = data[0]
+    code = data[1]
+
+    logging.debug("Tipo: " + type)
+    logging.debug("Codigo: " + code)
+
+    if type == ICMP_ECHO_REQUEST_TYPE:
+        sendICMPMessage(data[8:], ICMP_ECHO_REPLY_TYPE, code, data[4:6], data[6:8], srcIp)
+    elif type == ICMP_ECHO_REPLY_TYPE:
+        with timeLock:
+            value = icmp_send_times[srcIp+data[4:6]+data[6:8]]
+        sub = header.ts.tv_sec - value
+        print("Estimación del RTT: " + sub)
+
+    
+    return
     
 
 def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
@@ -80,6 +96,24 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
     '''
   
     icmp_message = bytes()
+
+    checksum = chksum(data)
+
+    if type == ICMP_ECHO_REQUEST_TYPE or type == ICMP_ECHO_REPLY_TYPE:
+        icmp_message += type
+        icmp_message += code
+        icmp_message += checksum.to_bytes(2, "big")
+        icmp_message += icmp_id
+        icmp_message += icmp_seqnum
+        icmp_message += data
+        if type == ICMP_ECHO_REQUEST_TYPE:
+            with timeLock:
+                icmp_send_times[dstIP+icmp_id+icmp_seqnum]
+
+        return sendIPDatagram(dstIP, icmp_message, bytes([0x01]))
+    else:
+        return False
+
    
 def initICMP():
     '''
@@ -94,4 +128,4 @@ def initICMP():
           
     '''
 
-    registerIPProtocol(process_ICMP_message, bytes([0x00, 0x01]))
+    registerIPProtocol(process_ICMP_message, bytes([0x01]))

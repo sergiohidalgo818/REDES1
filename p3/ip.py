@@ -9,6 +9,7 @@ from ethernet import *
 from arp import *
 from fcntl import ioctl
 import subprocess
+import math
 SIOCGIFMTU = 0x8921
 SIOCGIFNETMASK = 0x891b
 #Diccionario de protocolos. Las claves con los valores numéricos de protocolos de nivel superior a IP
@@ -209,6 +210,100 @@ def sendIPDatagram(dstIP,data,protocol):
           
     '''
     ip_header = bytes()
+    longhead = 0
+    
+    if ipOpts != None:
+        while (len(ipOpts) % 4) != 0:
+            ipOpts += bytes([0x00])
+        longhead = len(ipOpts)
+    
+
+    longhead += 20
+    
+    versionandihl = 64 + int(longhead/4)
+
+    typeservice = bytes([0x16])
+    
+    tlen = longhead + len(data)
+    
+    flagsandoffset = bytes([0x00, 0x00])
+    
+    tlive = bytes([0x80])
+
+    hchecksum = bytes([0x00, 0x00])
+
+    iporg=myIP.from_bytes(4, "big")
+    ipdst=dstIP.from_bytes(4, "big")
+
+        
+    if len(data) > MTU - longhead:
+
+        
+        newdatalen= MTU - (MTU-longhead %8)
+
+        datanum= math.ceil(len(data)/newdatalen)
 
 
+        
+        i = 0
+        offsetaux=0
 
+        while i < datanum:
+
+            if i == datanum -1:
+                flagsandoffset= int(offsetaux/8).to_bytes(2, "big")
+            else:
+                flagsandoffset= int(16+int(offsetaux/8)).to_bytes(2, "big")
+
+
+            if i == datanum -1:
+                tlen = len(data[offsetaux:]) + longhead
+            else:
+                tlen = int(newdatalen).to_bytes(2, "big") + longhead
+
+            
+            hchecksum = bytes([0x00, 0x00])
+
+            ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst 
+            if ipOpts != None:
+                ip_header+= ipOpts
+
+            hchecksum = chksum(ip_header).to_bytes(2, "big")
+            
+            ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst
+            
+            if ipOpts != None:
+                ip_header+= ipOpts
+           
+            if i == datanum -1:
+                ipdatagram = ip_header + data[offsetaux:]
+            
+            else:
+                ipdatagram = ip_header + data[offsetaux:(offsetaux+newdatalen)]
+
+            
+            offsetaux+=newdatalen
+            
+            sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), netmask)
+    
+    else:
+
+        ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst
+
+        if ipOpts != None:
+            ip_header+= ipOpts
+
+        hchecksum = chksum(ip_header).to_bytes(2, "big")
+            
+        ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst
+
+        if ipOpts != None:
+            ip_header+= ipOpts
+
+        ipdatagram = ip_header + data
+
+        sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), netmask)
+
+
+    IPID+=1
+    return

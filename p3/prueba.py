@@ -1,7 +1,6 @@
-import struct
-import fcntl
-
-
+from ip import * 
+SIOCGIFMTU = 0x8921
+SIOCGIFNETMASK = 0x891b
 if __name__ == "__main__":
     udp_datagram = bytes()
     data = bytes([0x13, 0xA1]*2)
@@ -30,3 +29,18 @@ if __name__ == "__main__":
     udp_datagram += data
     print(udp_datagram)
 
+    print(bytes ([0x4]))
+    diez=8
+    diezb=int(diez/4).to_bytes(1, "big")
+    tst= int(64).to_bytes(1, "big") 
+    test= int.from_bytes(tst, "big") + int.from_bytes(diezb, "big")
+
+    test = 64 +int(20/4)
+    print( hex(test) )
+
+
+    print(math.ceil( 3699/1480))
+
+    interface="ens33"
+
+    print(getNetmask(interface))

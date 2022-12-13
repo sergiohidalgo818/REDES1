@@ -94,7 +94,7 @@ def sendUDPDatagram(data,dstPort,dstIP):
     udp_datagram += bytes([0x00, 0x00])
     udp_datagram += data
 
-    return sendIPDatagram(dstIP, udp_datagram, bytes([0x00, 0x11]))
+    return sendIPDatagram(dstIP, udp_datagram, bytes([0x11]))
 
 
 def initUDP():
@@ -110,4 +110,4 @@ def initUDP():
           
     '''
 
-    registerIPProtocol(process_UDP_datagram, bytes([0x00, 0x11]))
+    registerIPProtocol(process_UDP_datagram, bytes([0x11]))
