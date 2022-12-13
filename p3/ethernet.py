@@ -233,7 +233,6 @@ def sendEthernetFrame(data:bytes,length:int,etherType:int,dstMac:bytes) -> int:
             -dstMac: Dirección MAC destino a incluir en la trama que se enviará
         Retorno: 0 si todo es correcto, -1 en otro caso
     '''
-    #logging.debug('Función no implementada')
     global macAddress,handle, levelInitialized
 
 
