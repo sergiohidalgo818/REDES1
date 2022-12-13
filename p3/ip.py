@@ -275,7 +275,7 @@ def sendIPDatagram(dstIP,data,protocol):
     iporg=myIP.to_bytes(4, "big")
     ipdst=dstIP.to_bytes(4, "big")
 
-    print("Enviando datagrama IP desde " + iporg + " hasta " + ipdst)
+    print("Enviando datagrama IP desde " + myIP + " hasta " + dstIP)
 
     if(dstIP & netmask == myIP & netmask):
         dstmac = ARPResolution(dstIP)
