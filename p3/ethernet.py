@@ -62,8 +62,6 @@ def process_Ethernet_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes) -> 
         Retorno:
             -Ninguno
     '''
-    # logging.debug('Trama nueva. Función no implementada')
-    #TODO: Implementar aquí el código que procesa una trama Ethernet en recepción
     global macAddress
     
     data = bytes(data)
