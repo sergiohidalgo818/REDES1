@@ -213,7 +213,6 @@ def initIP(interface,opts=None):
     myIP = getIP(interface)
     MTU = getMTU(interface)
     netmask = getNetmask(interface)
-    defaultGW = getDefaultGW(interface)
 
     ipOpts = opts
 
