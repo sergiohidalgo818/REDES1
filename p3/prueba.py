@@ -1,4 +1,4 @@
-from ip import * 
+import math
 SIOCGIFMTU = 0x8921
 SIOCGIFNETMASK = 0x891b
 if __name__ == "__main__":
@@ -41,6 +41,12 @@ if __name__ == "__main__":
 
     print(math.ceil( 3699/1480))
 
-    interface="ens33"
 
-    print(getNetmask(interface))
+    
+
+
+    print (udp_datagram[2:])
+
+    a, b = b'\x12', b'\xff'
+    bytes([a[0] & b[0]])
+    print ( bytes([udp_datagram[3] & int.from_bytes(b'\xff', "big")]))

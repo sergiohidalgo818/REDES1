@@ -47,8 +47,13 @@ def process_ICMP_message(us,header,data,srcIp):
         Retorno: Ninguno
     '''
 
-    type = data[0]
-    code = data[1]
+    suma = data[:2] + bytes([0x00,0x00]) + data[4:]
+
+    if(chksum(suma).to_bytes(2, "big") != data[2:4]):
+        return
+
+    type = data[:1]
+    code = data[1:2]
 
     logging.debug("Tipo: " + type)
     logging.debug("Codigo: " + code)
@@ -97,18 +102,31 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
   
     icmp_message = bytes()
 
-    checksum = chksum(data)
+    checksum = bytes([0x00, 0x00])
 
     if type == ICMP_ECHO_REQUEST_TYPE or type == ICMP_ECHO_REPLY_TYPE:
         icmp_message += type
+        icmp_message += code
+        icmp_message += checksum
+        icmp_message += icmp_id
+        icmp_message += icmp_seqnum
+        icmp_message += data
+
+        if (len (icmp_message) %2) != 0:
+            icmp_message += bytes([0x00]) 
+
+        checksum = chksum(icmp_message)
+
+        icmp_message = type
         icmp_message += code
         icmp_message += checksum.to_bytes(2, "big")
         icmp_message += icmp_id
         icmp_message += icmp_seqnum
         icmp_message += data
+
         if type == ICMP_ECHO_REQUEST_TYPE:
             with timeLock:
-                icmp_send_times[dstIP+icmp_id+icmp_seqnum]
+                icmp_send_times[dstIP+icmp_id+icmp_seqnum] = time.time()
 
         return sendIPDatagram(dstIP, icmp_message, bytes([0x01]))
     else:

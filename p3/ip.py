@@ -123,19 +123,19 @@ def process_IP_datagram(us,header,data,srcMac):
         Retorno: Ninguno
     '''
 
-    ihl = data[4:7]
-    ipid = data[32:47]
-    df = data[49]
-    mf = data[50]
-    offset = data[51:63]
-    tlive = data[64:71]
-    proto = data[72:79]
-    IPorg = data[96:127]
-    IPdest = data[128:159]
+    ihl = bytes([data[0] & int.from_bytes(b'\x0f', "big")])
+    ipid = data[4:6]
+    df = bytes([data[6] & int.from_bytes(b'\x40', "big")])
+    mf = bytes([data[6] & int.from_bytes(b'\x20', "big")])
+    offset = bytes([data[6] & int.from_bytes(b'\x1f', "big")]) + data[7:8]
+    tlive = data[8:9]
+    proto = data[9:10]
+    IPorg = data[12:16]
+    IPdest = data[16:20]
 
-    suma = data[:79] + bytes([0x00, 0x00]) + data[96:]
+    suma = data[:10] + bytes([0x00, 0x00]) + data[12:]
 
-    if (chksum(suma).to_bytes(2, "big") != data[8:96]):
+    if (chksum(suma).to_bytes(2, "big") != data[10:12]):
         return
     
     if offset!=0:
@@ -158,7 +158,7 @@ def process_IP_datagram(us,header,data,srcMac):
     
     f = upperProtos[protocol]
     
-    f(us, header, data[int.from_bytes(data[16:31], "big"):], IPorg)
+    f(us, header, data[int.from_bytes(data[2:4], "big"):], IPorg)
     
 
 
@@ -297,7 +297,7 @@ def sendIPDatagram(dstIP,data,protocol):
 
 
             if i == datanum -1:
-                tlen = len(data[offsetaux:]) + longhead
+                tlen = len(data[offsetaux-1:]) + longhead
             else:
                 tlen = int(newdatalen).to_bytes(2, "big") + longhead
 
@@ -316,10 +316,10 @@ def sendIPDatagram(dstIP,data,protocol):
                 ip_header+= ipOpts
            
             if i == datanum -1:
-                ipdatagram = ip_header + data[offsetaux:]
+                ipdatagram = ip_header + data[offsetaux-1:]
             
             else:
-                ipdatagram = ip_header + data[offsetaux:(offsetaux+newdatalen)]
+                ipdatagram = ip_header + data[offsetaux-1:(offsetaux+newdatalen)-1]
 
             
             offsetaux+=newdatalen
