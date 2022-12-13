@@ -123,8 +123,43 @@ def process_IP_datagram(us,header,data,srcMac):
         Retorno: Ninguno
     '''
 
+    ihl = data[4:7]
+    ipid = data[32:47]
+    df = data[49]
+    mf = data[50]
+    offset = data[51:63]
+    tlive = data[64:71]
+    proto = data[72:79]
+    IPorg = data[96:127]
+    IPdest = data[128:159]
 
+    suma = data[:79] + bytes([0x00, 0x00]) + data[96:]
 
+    if (chksum(suma).to_bytes(2, "big") != data[8:96]):
+        return
+    
+    if offset!=0:
+        return
+
+    logging.debug("Longitud de la cabecera IP: " + ihl)
+    logging.debug("IPID: " + ipid)
+    logging.debug("TTL: " + tlive)
+    logging.debug("DF: " + df)
+    logging.debug("MF: " + mf)
+    logging.debug("Offset: " + offset)
+    logging.debug("IP origen: " + IPorg)
+    logging.debug("IP destino: " + IPdest)
+    logging.debug("Protocolo: " + proto)
+
+    protocol = int.from_bytes(proto, "big")
+    
+    if not protocol in upperProtos:
+        return
+    
+    f = upperProtos[protocol]
+    
+    f(us, header, data[int.from_bytes(data[16:31], "big"):], IPorg)
+    
 
 
 def registerIPProtocol(callback,protocol):
@@ -148,6 +183,9 @@ def registerIPProtocol(callback,protocol):
             -protocol: valor del campo protocolo de IP para el cuál se quiere registrar una función de callback.
         Retorno: Ninguno 
     '''
+    global upperProtos
+
+    upperProtos[struct.unpack('h',protocol)] = callback
 
 def initIP(interface,opts=None):
     global myIP, MTU, netmask, defaultGW, ipOpts, IPID
@@ -211,6 +249,8 @@ def sendIPDatagram(dstIP,data,protocol):
     '''
     ip_header = bytes()
     longhead = 0
+
+    ret = 0
     
     if ipOpts != None:
         while (len(ipOpts) % 4) != 0:
@@ -284,7 +324,7 @@ def sendIPDatagram(dstIP,data,protocol):
             
             offsetaux+=newdatalen
             
-            sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), netmask)
+            ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), netmask)
     
     else:
 
@@ -302,8 +342,12 @@ def sendIPDatagram(dstIP,data,protocol):
 
         ipdatagram = ip_header + data
 
-        sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), netmask)
+        ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), netmask)
 
 
     IPID+=1
-    return
+
+    if(ret <0):
+        return False
+
+    return True
