@@ -260,7 +260,7 @@ def sendIPDatagram(dstIP,data,protocol):
 
     longhead += 20
     
-    versionandihl = 64 + int(longhead/4)
+    versionandihl = (64 + int(longhead/4)).to_bytes(2, "big")
 
     typeservice = bytes([0x16])
     
