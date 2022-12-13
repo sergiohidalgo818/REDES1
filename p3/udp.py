@@ -83,7 +83,7 @@ def sendUDPDatagram(data,dstPort,dstIP):
 
     udp_datagram = srcPort 
 
-    udp_datagram += dstPort.to_bytes(2, "big")
+    udp_datagram += dstPort
 
     length = len(udp_datagram + data)
     
