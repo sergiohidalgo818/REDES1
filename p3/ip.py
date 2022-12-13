@@ -331,7 +331,7 @@ def sendIPDatagram(dstIP,data,protocol):
             
             offsetaux+=newdatalen
             
-            ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), dstmac) #FALLO AQUÍ EN LA NETMASK
+            ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), dstmac)
     
     else:
 

@@ -91,9 +91,6 @@ def processARPRequest(data:bytes,MAC:bytes)->None:
         Retorno: Ninguno
     '''
     global myIP
-    #logging.debug('Función no implementada')
-    #TODO implementar aquí
-
 
 
     mac_org = data[2:8]
@@ -144,8 +141,6 @@ def processARPReply(data:bytes,MAC:bytes)->None:
         Retorno: Ninguno
     '''
     global requestedIP,resolvedMAC,awaitingResponse,cache
-    #logging.debug('Función no implentada')    
-    #TODO implementar aquí
         
     mac_org = data[2:8]
     if mac_org != MAC:
@@ -237,8 +232,6 @@ def process_arp_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes,srcMac:by
             -srcMac: MAC origen de la trama Ethernet que se ha recibido
         Retorno: Ninguno
     '''
-    #logging.debug('Función no implementada')
-    #TODO implementar aquí
     if not arpInitialized:
         return
 
@@ -270,8 +263,6 @@ def initARP(interface:str) -> int:
             -Marcar la variable de nivel ARP inicializado a True
     '''
     global myIP,myMAC,arpInitialized
-    #logging.debug('Función no implementada')
-    #TODO implementar aquí
     
     registerCallback(process_arp_frame,bytes([0x08,0x06]))
 
@@ -310,8 +301,6 @@ def ARPResolution(ip:int) -> bytes:
 
     global requestedIP,awaitingResponse,resolvedMAC
 
-    logging.debug('Función no implementada')
-    #TODO implementar aquí
 
 
     with cacheLock:
