@@ -223,7 +223,7 @@ def initIP(interface,opts=None):
 
 
 def sendIPDatagram(dstIP,data,protocol):
-    global IPID
+    global IPID, ipOpts
     '''
         Nombre: sendIPDatagram
         Descripción: Esta función construye un datagrama IP y lo envía. En caso de que los datos a enviar sean muy grandes la función
