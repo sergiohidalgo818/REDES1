@@ -102,10 +102,7 @@ def processARPRequest(data:bytes,MAC:bytes)->None:
     ip_dest = data[18:22]
 
     ip_r = struct.pack('!I', myIP)
-    
-    print(data)
-    print(ip_org)
-    print(ip_r)
+
 
     if ip_dest != ip_r:
         return
@@ -271,7 +268,6 @@ def initARP(interface:str) -> int:
     myMAC = getHwAddr(interface)
     
     free_res = ARPResolution(myIP)
-    print(free_res)
     if free_res:
         return -1
     
@@ -320,7 +316,7 @@ def ARPResolution(ip:int) -> bytes:
     while i < 3:
         if awaitingResponse:
             sendEthernetFrame(arpR, len(arpR), bytes([0x08,0x06]), broadcastAddr)
-            print("Se busca la IP: " + ':'.join(['{:02d}'.format(b) for b in ip.to_bytes(4,"big")]))
+            print("Se busca la IP: " + '.'.join(['{:02d}'.format(b) for b in ip.to_bytes(4,"big")]))
             time.sleep(1)
             i+= 1
         else:
