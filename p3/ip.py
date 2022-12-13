@@ -275,13 +275,7 @@ def sendIPDatagram(dstIP,data,protocol):
     iporg=myIP.to_bytes(4, "big")
     ipdst=dstIP.to_bytes(4, "big")
 
-    print("Enviando datagrama IP desde ")
-
-    print(':'.join(['{:02d}'.format(b) for b in iporg]))
-
-    print("hasta ")
-
-    print(':'.join(['{:02d}'.format(b) for b in ipdst]))
+    print("Enviando datagrama IP desde " + ':'.join(['{:02d}'.format(b) for b in iporg]) + ':'.join(['{:02d}'.format(b) for b in ipdst]))
 
 
     if(dstIP & netmask == myIP & netmask):
