@@ -22,7 +22,6 @@ import socket
 DST_PORT = 443
 ICMP_ECHO_REQUEST_TYPE = 8
 ICMP_ECHO_REQUEST_CODE = 0
-ICMP_ID=0
 ipTstampOption =	bytes([68,12,13,0x01,10,0,0,3])
 
 if __name__ == "__main__":

@@ -275,6 +275,13 @@ def sendIPDatagram(dstIP,data,protocol):
     iporg=myIP.to_bytes(4, "big")
     ipdst=dstIP.to_bytes(4, "big")
 
+    if(dstIP & netmask == myIP & netmask):
+        dstmac = ARPResolution(dstIP)
+    else:
+        dstmac = ARPResolution(defaultGW)
+        
+    if dstmac == None: 
+            return False
         
     if len(data) > MTU - longhead:
 
@@ -324,7 +331,7 @@ def sendIPDatagram(dstIP,data,protocol):
             
             offsetaux+=newdatalen
             
-            ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), netmask.to_bytes(4, "big")) #FALLO AQUÍ EN LA NETMASK
+            ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), dstmac) #FALLO AQUÍ EN LA NETMASK
     
     else:
 
@@ -342,7 +349,7 @@ def sendIPDatagram(dstIP,data,protocol):
 
         ipdatagram = ip_header + data
 
-        ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), netmask)
+        ret+=sendEthernetFrame(ipdatagram, len(ipdatagram), bytes([0x08,0x00]), dstmac)
 
 
     IPID+=1
