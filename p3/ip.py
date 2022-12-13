@@ -272,8 +272,8 @@ def sendIPDatagram(dstIP,data,protocol):
 
     hchecksum = bytes([0x00, 0x00])
 
-    iporg=myIP.from_bytes(4, "big")
-    ipdst=dstIP.from_bytes(4, "big")
+    iporg=myIP.to_bytes(4, "big")
+    ipdst=dstIP.to_bytes(4, "big")
 
         
     if len(data) > MTU - longhead:
