@@ -105,7 +105,7 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
     checksum = bytes([0x00, 0x00])
 
     if type == ICMP_ECHO_REQUEST_TYPE or type == ICMP_ECHO_REPLY_TYPE:
-        icmp_message += type
+        icmp_message += type.to_bytes(2, "big")
         icmp_message += code
         icmp_message += checksum
         icmp_message += icmp_id
