@@ -78,7 +78,7 @@ def sendUDPDatagram(data,dstPort,dstIP):
           
     '''
     udp_datagram = bytes()
-    srcPort = getUDPSourcePort()
+    srcPort = getUDPSourcePort().to_bytes(2, "big")
     dstPort = bytes([0x12, 0x92])
 
     udp_datagram = srcPort 
