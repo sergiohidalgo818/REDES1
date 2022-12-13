@@ -49,9 +49,9 @@ def process_UDP_datagram(us,header,data,srcIP):
     '''
 
     print("process")
-    srcPort = data[:15]
-    dstPort = data[16:31]
-    data_datagram = data[64:]
+    srcPort = data[:2]
+    dstPort = data[2:4]
+    data_datagram = data[8:]
 
     logging.debug("Puerto origen: " + srcPort)
     logging.debug("Puerto destino: " + dstPort)
