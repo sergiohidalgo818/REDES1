@@ -47,6 +47,8 @@ def process_UDP_datagram(us,header,data,srcIP):
         Retorno: Ninguno
           
     '''
+
+    print("process")
     srcPort = data[:15]
     dstPort = data[16:31]
     data_datagram = data[64:]

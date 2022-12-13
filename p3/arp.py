@@ -1,3 +1,4 @@
+
 '''
     arp.py
     Implementación del protocolo ARP y funciones auxiliares que permiten realizar resoluciones de direcciones IP.
@@ -101,7 +102,7 @@ def processARPRequest(data:bytes,MAC:bytes)->None:
     
     ip_dest = data[18:22]
 
-    ip_r = struct.pack('!I', myIP)
+    ip_r = myIP.to_bytes(4, 'big')
 
 
     if ip_dest != ip_r:
@@ -140,32 +141,37 @@ def processARPReply(data:bytes,MAC:bytes)->None:
     global requestedIP,resolvedMAC,awaitingResponse,cache
         
     mac_org = data[2:8]
+
     if mac_org != MAC:
         return
 
     ip_org = data[8:12]
 
-    mac_dest = data[12:18]
+    mac_dest = data[18:24]
     
     ip_dest = data[18:22]
 
-    ip_r = struct.pack('!I', myIP)
+    ip_r = myIP.to_bytes(4, 'big')
+
+
 
     if ip_dest != ip_r:
         return
 
-    if ip_org != struct.pack('!I', requestedIP):
-        return
+    
 
     with globalLock:
+        if int.from_bytes(ip_org, byteorder='big') != requestedIP:
+            return
+
         resolvedMAC = mac_org
 
-    with cacheLock:
-        cache = {requestedIP: mac_org}
-
-    with globalLock:
-        requestedIP = None
         awaitingResponse = False
+
+        with cacheLock:
+            cache[requestedIP] = resolvedMAC
+
+        requestedIP = None
         
     return
 
@@ -183,9 +189,9 @@ def createARPRequest(ip:int) -> bytes:
     frame = ARPHeader
     frame += bytes([0x00,0x01])
     frame += myMAC
-    frame += bytes(struct.pack('!I', myIP))
+    frame += myIP.to_bytes(4, 'big') 
     frame += broadcastAddr
-    frame += bytes(struct.pack('!I', ip))
+    frame += ip.to_bytes(4, 'big') 
 
     return frame
     
@@ -248,6 +254,7 @@ def process_arp_frame(us:ctypes.c_void_p,header:pcap_pkthdr,data:bytes,srcMac:by
         return
     
     return
+    
 
         
 def initARP(interface:str) -> int:
@@ -306,8 +313,9 @@ def ARPResolution(ip:int) -> bytes:
     with globalLock:
         awaitingResponse = True
         requestedIP = ip
+        print("Resol")
 
-
+    
     arpR = createARPRequest(ip)
 
     i=0

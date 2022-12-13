@@ -5,6 +5,7 @@
     Autor: Javier Ramos <javier.ramos@uam.es>
     2022 EPS-UAM
 '''
+import math
 from ethernet import *
 from arp import *
 from fcntl import ioctl
@@ -277,17 +278,11 @@ def sendIPDatagram(dstIP,data,protocol):
 
 
 
-    if(dstIP & netmask == myIP & netmask):
-        dstmac = ARPResolution(dstIP)
-    else:
-        dstmac = ARPResolution(defaultGW)
-        
-    if dstmac == None: 
-            return False
-        
-    print("Enviando datagrama IP desde " + ':'.join(['{:02d}'.format(b) for b in iporg]) + " hasta " + ':'.join(['{:02d}'.format(b) for b in ipdst]))
+
+    print("Enviando datagrama IP desde " + '.'.join(['{:02d}'.format(b) for b in iporg]) + " hasta " + '.'.join(['{:02d}'.format(b) for b in ipdst]))
     
-    if len(data) > MTU - longhead:
+    
+    if len(data) > (MTU - longhead):
 
         
         newdatalen= MTU - (MTU-longhead %8)
@@ -298,6 +293,7 @@ def sendIPDatagram(dstIP,data,protocol):
         
         i = 0
         offsetaux=0
+
 
         while i < datanum:
 
@@ -334,6 +330,15 @@ def sendIPDatagram(dstIP,data,protocol):
 
             
             offsetaux+=newdatalen
+
+            if(dstIP & netmask == myIP & netmask):
+                dstmac = ARPResolution(dstIP)
+            else:
+                dstmac = ARPResolution(defaultGW)
+        
+            if dstmac == None: 
+                return False
+        
             
             ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), dstmac)
     
@@ -353,6 +358,15 @@ def sendIPDatagram(dstIP,data,protocol):
 
         ipdatagram = ip_header + data
 
+        if(dstIP & netmask == myIP & netmask):
+            dstmac = ARPResolution(dstIP)
+        else:
+            dstmac = ARPResolution(defaultGW)
+        
+        if dstmac == None: 
+                return False
+
+                
         ret+=sendEthernetFrame(ipdatagram, len(ipdatagram), bytes([0x08,0x00]), dstmac)
 
 
