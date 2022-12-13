@@ -260,11 +260,11 @@ def sendIPDatagram(dstIP,data,protocol):
 
     longhead += 20
     
-    versionandihl = (64 + int(longhead/4)).to_bytes(2, "big")
+    versionandihl = (64 + int(longhead/4)).to_bytes(1, "big")
 
     typeservice = bytes([0x16])
     
-    tlen = longhead + len(data)
+    tlen = (longhead + len(data)).to_bytes(2, "big")
     
     flagsandoffset = bytes([0x00, 0x00])
     
@@ -297,9 +297,9 @@ def sendIPDatagram(dstIP,data,protocol):
 
 
             if i == datanum -1:
-                tlen = len(data[offsetaux-1:]) + longhead
+                tlen = (len(data[offsetaux-1:]) + longhead).to_bytes(2, "big")
             else:
-                tlen = int(newdatalen).to_bytes(2, "big") + longhead
+                tlen = int(newdatalen + longhead).to_bytes(2, "big")
 
             
             hchecksum = bytes([0x00, 0x00])
