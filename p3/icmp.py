@@ -106,10 +106,10 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
 
     if type == ICMP_ECHO_REQUEST_TYPE or type == ICMP_ECHO_REPLY_TYPE:
         icmp_message += type.to_bytes(2, "big")
-        icmp_message += code
+        icmp_message += code.to_bytes(2, "big")
         icmp_message += checksum
-        icmp_message += icmp_id
-        icmp_message += icmp_seqnum
+        icmp_message += icmp_id.to_bytes(2, "big")
+        icmp_message += icmp_seqnum.to_bytes(2, "big")
         icmp_message += data
 
         if (len (icmp_message) %2) != 0:
@@ -117,11 +117,11 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
 
         checksum = chksum(icmp_message)
 
-        icmp_message = type
-        icmp_message += code
+        icmp_message = type.to_bytes(2, "big")
+        icmp_message += code.to_bytes(2, "big")
         icmp_message += checksum.to_bytes(2, "big")
-        icmp_message += icmp_id
-        icmp_message += icmp_seqnum
+        icmp_message += icmp_id.to_bytes(2, "big")
+        icmp_message += icmp_seqnum.to_bytes(2, "big")
         icmp_message += data
 
         if type == ICMP_ECHO_REQUEST_TYPE:

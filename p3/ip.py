@@ -88,7 +88,7 @@ def getDefaultGW(interface):
     '''
     p = subprocess.Popen(['ip r | grep default | awk \'{print $3}\''], stdout=subprocess.PIPE, shell=True)
     dfw = p.stdout.read().decode('utf-8')
-    print("default" + dfw)
+    print("Default Gateway " + dfw)
     return struct.unpack('!I',socket.inet_aton(dfw))[0]
 
 
