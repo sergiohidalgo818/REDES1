@@ -110,4 +110,4 @@ def initUDP():
           
     '''
 
-    registerIPProtocol(process_UDP_datagram, bytes([0x11]))
+    registerIPProtocol(process_UDP_datagram, bytes([0x00, 0x11]))

@@ -146,4 +146,4 @@ def initICMP():
           
     '''
 
-    registerIPProtocol(process_ICMP_message, bytes([0x01]))
+    registerIPProtocol(process_ICMP_message, bytes([0x00, 0x01]))
