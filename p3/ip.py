@@ -9,7 +9,6 @@ from ethernet import *
 from arp import *
 from fcntl import ioctl
 import subprocess
-import math
 SIOCGIFMTU = 0x8921
 SIOCGIFNETMASK = 0x891b
 #Diccionario de protocolos. Las claves con los valores numéricos de protocolos de nivel superior a IP
@@ -88,8 +87,9 @@ def getDefaultGW(interface):
     '''
     p = subprocess.Popen(['ip r | grep default | awk \'{print $3}\''], stdout=subprocess.PIPE, shell=True)
     dfw = p.stdout.read().decode('utf-8')
-    print("Default Gateway " + dfw)
+    print(dfw)
     return struct.unpack('!I',socket.inet_aton(dfw))[0]
+
 
 
 
@@ -213,6 +213,7 @@ def initIP(interface,opts=None):
     myIP = getIP(interface)
     MTU = getMTU(interface)
     netmask = getNetmask(interface)
+    defaultGW = getDefaultGW(interface)
 
     ipOpts = opts
 
