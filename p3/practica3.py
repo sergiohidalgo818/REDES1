@@ -23,7 +23,7 @@ DST_PORT = 443
 ICMP_ECHO_REQUEST_TYPE = 8
 ICMP_ECHO_REQUEST_CODE = 0
 ipTstampOption =	bytes([68,12,13,0x01,10,0,0,3])
-
+ICMP_ID = 0
 if __name__ == "__main__":
 	ICMP_SEQNUM = 0
 	parser = argparse.ArgumentParser(description='Envía datagramas UDP o mensajes ICMP con diferentes opciones',
