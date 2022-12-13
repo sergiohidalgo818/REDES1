@@ -275,7 +275,6 @@ def sendIPDatagram(dstIP,data,protocol):
     iporg=myIP.to_bytes(4, "big")
     ipdst=dstIP.to_bytes(4, "big")
 
-    print("Enviando datagrama IP desde " + ':'.join(['{:02d}'.format(b) for b in iporg]) + "hasta " + ':'.join(['{:02d}'.format(b) for b in ipdst]))
 
 
     if(dstIP & netmask == myIP & netmask):
@@ -286,73 +285,25 @@ def sendIPDatagram(dstIP,data,protocol):
     if dstmac == None: 
             return False
         
-    if len(data) > MTU - longhead:
-
-        
-        newdatalen= MTU - (MTU-longhead %8)
-
-        datanum= math.ceil(len(data)/newdatalen)
-
-
-        
-        i = 0
-        offsetaux=0
-
-        while i < datanum:
-
-            if i == datanum -1:
-                flagsandoffset= int(offsetaux/8).to_bytes(2, "big")
-            else:
-                flagsandoffset= int(16+int(offsetaux/8)).to_bytes(2, "big")
-
-
-            if i == datanum -1:
-                tlen = (len(data[offsetaux-1:]) + longhead).to_bytes(2, "big")
-            else:
-                tlen = int(newdatalen + longhead).to_bytes(2, "big")
-
-            
-            hchecksum = bytes([0x00, 0x00])
-
-            ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst 
-            if ipOpts != None:
-                ip_header+= ipOpts
-
-            hchecksum = chksum(ip_header).to_bytes(2, "big")
-            
-            ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst
-            
-            if ipOpts != None:
-                ip_header+= ipOpts
-           
-            if i == datanum -1:
-                ipdatagram = ip_header + data[offsetaux-1:]
-            
-            else:
-                ipdatagram = ip_header + data[offsetaux-1:(offsetaux+newdatalen)-1]
-
-            
-            offsetaux+=newdatalen
-            
-            ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), dstmac)
+    print("Enviando datagrama IP desde " + ':'.join(['{:02d}'.format(b) for b in iporg]) + "hasta " + ':'.join(['{:02d}'.format(b) for b in ipdst]))
     
-    else:
+    
 
-        ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst
+    ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst
 
-        if ipOpts != None:
+    if ipOpts != None:
             ip_header+= ipOpts
 
-        hchecksum = chksum(ip_header).to_bytes(2, "big")
+    hchecksum = chksum(ip_header).to_bytes(2, "big")
             
-        ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst
+    ip_header = versionandihl + typeservice + tlen + IPID.to_bytes(2, "big") + flagsandoffset + tlive + protocol + hchecksum + iporg + ipdst
 
-        if ipOpts != None:
+    if ipOpts != None:
             ip_header+= ipOpts
 
-        ipdatagram = ip_header + data
+    ipdatagram = ip_header + data
 
-        ret+=sendEthernetFrame(ipdatagram, len(ipdatagram), bytes([0x08,0x00]), dstmac)
+    ret+=sendEthernetFrame(ipdatagram, len(ipdatagram), bytes([0x08,0x00]), dstmac)
 
 
     IPID+=1
