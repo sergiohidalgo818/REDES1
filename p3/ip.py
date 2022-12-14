@@ -138,7 +138,8 @@ def process_IP_datagram(us,header,data,srcMac):
 
     if(chksum(suma) != int.from_bytes(data[10:12],"big")):
         return
-
+    if(int.from_bytes(offset,"big") != 0):
+        return
 
     logging.debug("\nLongitud de la cabecera IP: " + str(int.from_bytes(ihl,"big")*4))
     logging.debug("IPID: " + str(int.from_bytes(ipid,"big")))
@@ -151,9 +152,11 @@ def process_IP_datagram(us,header,data,srcMac):
     logging.debug("Protocolo: " + str(int.from_bytes(proto,"big")))
 
 
-    proto = int.from_bytes(proto, 'big')
-    if proto in protocols.keys():
-        protocols[proto](us, header, data[ihl*4:], IPorg)
+    
+    f = protocols[int.from_bytes(proto, "big")]
+    
+    f(us, header, data[int.from_bytes(ihl,"big")*4:], IPorg)
+    
 
 
 def registerIPProtocol(callback,protocol):
@@ -177,9 +180,9 @@ def registerIPProtocol(callback,protocol):
             -protocol: valor del campo protocolo de IP para el cuál se quiere registrar una función de callback.
         Retorno: Ninguno 
     '''
-    global upperProtos
+    global protocols
 
-    upperProtos[struct.unpack('h',protocol)] = callback
+    protocols[int.from_bytes(protocol, "big")] = callback
 
 def initIP(interface,opts=None):
     global myIP, MTU, netmask, defaultGW, ipOpts, IPID
@@ -295,11 +298,11 @@ def sendIPDatagram(dstIP,data,protocol):
             if i == datanum -1:
                 flagsandoffset= int(offsetaux/8).to_bytes(2, "big")
             else:
-                flagsandoffset= int(16+int(offsetaux/8)).to_bytes(2, "big")
+                flagsandoffset= int(8192+int(offsetaux/8)).to_bytes(2, "big")
 
 
             if i == datanum -1:
-                tlen = (len(data[offsetaux-1:]) + longhead).to_bytes(2, "big")
+                tlen = (len(data[offsetaux:]) + longhead).to_bytes(2, "big")
             else:
                 tlen = int(newdatalen + longhead).to_bytes(2, "big")
 
@@ -318,10 +321,10 @@ def sendIPDatagram(dstIP,data,protocol):
                 ip_header+= ipOpts
            
             if i == datanum -1:
-                ipdatagram = ip_header + data[offsetaux-1:]
+                ipdatagram = ip_header + data[offsetaux:]
             
             else:
-                ipdatagram = ip_header + data[offsetaux-1:(offsetaux+newdatalen)-1]
+                ipdatagram = ip_header + data[offsetaux:(offsetaux+newdatalen)]
 
             
             offsetaux+=newdatalen
@@ -335,7 +338,8 @@ def sendIPDatagram(dstIP,data,protocol):
                 return False
         
             
-            ret+=sendEthernetFrame(ipdatagram, tlen, bytes([0x08,0x00]), dstmac)
+            ret+=sendEthernetFrame(ipdatagram, len(ipdatagram), bytes([0x08,0x00]), dstmac)
+            i+=1
     
     else:
 

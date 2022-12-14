@@ -322,7 +322,7 @@ def ARPResolution(ip:int) -> bytes:
         if awaitingResponse:
             sendEthernetFrame(arpR, len(arpR), bytes([0x08,0x06]), broadcastAddr)
             print("Se busca la IP: " + '.'.join(['{:02d}'.format(b) for b in ip.to_bytes(4,"big")]))
-            time.sleep(1)
+            time.sleep(0.6)
             i+= 1
         else:
             print("Se ha resuelto")

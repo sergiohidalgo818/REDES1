@@ -47,7 +47,8 @@ def process_ICMP_message(us,header,data,srcIp):
         Retorno: Ninguno
     '''
 
-    suma = data[:2] + data[4:]
+    suma = data[:2] + bytes([0x00, 0x00]) + data[4:]
+
 
     if(chksum(suma) != int.from_bytes(data[2:4], "big")):
         return
@@ -55,8 +56,8 @@ def process_ICMP_message(us,header,data,srcIp):
     type = data[:1]
     code = data[1:2]
 
-    logging.debug("Tipo: " + type)
-    logging.debug("Codigo: " + code)
+    logging.debug("Tipo: " + str(type))
+    logging.debug("Codigo: " + str(code))
 
     if type == ICMP_ECHO_REQUEST_TYPE:
         sendICMPMessage(data[8:], ICMP_ECHO_REPLY_TYPE, code, data[4:6], data[6:8], srcIp)
@@ -64,7 +65,7 @@ def process_ICMP_message(us,header,data,srcIp):
         with timeLock:
             value = icmp_send_times[srcIp+data[4:6]+data[6:8]]
         sub = header.ts.tv_sec - value
-        print("Estimación del RTT: " + sub)
+        print("Estimación del RTT: " + str(sub))
 
     
     return
@@ -103,26 +104,26 @@ def sendICMPMessage(data,type,code,icmp_id,icmp_seqnum,dstIP):
     icmp_message = bytes()
 
     checksum = bytes([0x00, 0x00])
-
     if type == ICMP_ECHO_REQUEST_TYPE or type == ICMP_ECHO_REPLY_TYPE:
-        icmp_message += type.to_bytes(2, "big")
-        icmp_message += code.to_bytes(2, "big")
+        icmp_message += type.to_bytes(1, "big")
+        icmp_message += code.to_bytes(1, "big")
         icmp_message += checksum
         icmp_message += icmp_id.to_bytes(2, "big")
         icmp_message += icmp_seqnum.to_bytes(2, "big")
         icmp_message += data
 
-        if (len (icmp_message) %2) != 0:
-            icmp_message += bytes([0x00]) 
-
         checksum = chksum(icmp_message)
 
-        icmp_message = type.to_bytes(2, "big")
-        icmp_message += code.to_bytes(2, "big")
+
+        icmp_message = type.to_bytes(1, "big")
+        icmp_message += code.to_bytes(1, "big")
         icmp_message += checksum.to_bytes(2, "big")
         icmp_message += icmp_id.to_bytes(2, "big")
         icmp_message += icmp_seqnum.to_bytes(2, "big")
         icmp_message += data
+
+        if(len(icmp_message) % 2 != 0): 
+            icmp_message=type.to_bytes(1, "big")+ code.to_bytes(1, "big") + int(0).to_bytes(1, byteorder="big") + checksum.to_bytes(2, "big") + icmp_seqnum.to_bytes(2, "big") +data
 
         if type == ICMP_ECHO_REQUEST_TYPE:
             with timeLock:
@@ -146,4 +147,4 @@ def initICMP():
           
     '''
 
-    registerIPProtocol(process_ICMP_message, bytes([0x00, 0x01]))
+    registerIPProtocol(process_ICMP_message, bytes([0x01]))
