@@ -59,11 +59,11 @@ def process_ICMP_message(us,header,data,srcIp):
     logging.debug("Tipo: " + str(type))
     logging.debug("Codigo: " + str(code))
 
-    if type == ICMP_ECHO_REQUEST_TYPE:
-        sendICMPMessage(data[8:], ICMP_ECHO_REPLY_TYPE, code, data[4:6], data[6:8], srcIp)
-    elif type == ICMP_ECHO_REPLY_TYPE:
+    if int.from_bytes(type, "big") == ICMP_ECHO_REQUEST_TYPE:
+        sendICMPMessage(data[8:], ICMP_ECHO_REPLY_TYPE, int.from_bytes(code, "big"), int.from_bytes(data[4:6], "big"), int.from_bytes(data[6:8], "big"), int.from_bytes(srcIp, "big"))
+    elif int.from_bytes(type, "big") == ICMP_ECHO_REPLY_TYPE:
         with timeLock:
-            value = icmp_send_times[srcIp+data[4:6]+data[6:8]]
+            value = icmp_send_times[int.from_bytes(srcIp, "big")+int.from_bytes(data[4:6], "big")+int.from_bytes(data[6:8], "big")]
         sub = header.ts.tv_sec - value
         print("Estimación del RTT: " + str(sub))
 
