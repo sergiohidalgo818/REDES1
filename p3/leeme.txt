@@ -1,0 +1,21 @@
+Mario García Iribas y Sergio Hidalgo Gamborino
+
+Envíos UDP sin opciones:
+- Realizado.
+Envíos UDP con opciones:
+- Realizado
+Envíos UDP con fichero:
+- Realizado
+Envíos UDP con fichero y capacidad de MTU reducida:
+- Realizado
+Envío ICPM:
+- Realizado, pero no recibe respuesta del sistema operativo (pero sí se responden entre ambos nodos)
+un posible motivo de de esto es que el checksum aparece como erroneo en wireshark, por lo que el sistema 
+operativo, para prevenir de riesgos de modificación malintencionada de la información de la cabecera,
+lo descarta
+Envío de datagramas UDP a hosts fuera de la subred:
+- Realizado
+Compatibilidad con ping estándar de Linux:
+- No Realizado
+
+Dentro del fichero "capturas" se muestran capturas relevantes sobre cada apartado de la práctica.
