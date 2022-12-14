@@ -134,9 +134,11 @@ def process_IP_datagram(us,header,data,srcMac):
     IPorg = data[12:16]
     IPdest = data[16:20]
 
+    suma = data[:10] + data[12:int.from_bytes(ihl,"big")*4]
 
+    if(chksum(suma) != int.from_bytes(data[10:12],"big")):
+        return
 
-    suma = data[:10] + bytes([0x00, 0x00]) + data[12:]
 
     logging.debug("\nLongitud de la cabecera IP: " + str(int.from_bytes(ihl,"big")*4))
     logging.debug("IPID: " + str(int.from_bytes(ipid,"big")))

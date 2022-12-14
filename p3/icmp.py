@@ -47,9 +47,9 @@ def process_ICMP_message(us,header,data,srcIp):
         Retorno: Ninguno
     '''
 
-    suma = data[:2] + bytes([0x00,0x00]) + data[4:]
+    suma = data[:2] + data[4:]
 
-    if(chksum(suma).to_bytes(2, "big") != data[2:4]):
+    if(chksum(suma) != int.from_bytes(data[2:4], "big")):
         return
 
     type = data[:1]
