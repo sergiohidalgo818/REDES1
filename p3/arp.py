@@ -1,4 +1,3 @@
-
 '''
     arp.py
     Implementación del protocolo ARP y funciones auxiliares que permiten realizar resoluciones de direcciones IP.
@@ -70,7 +69,6 @@ def printCache()->None:
         for k in cache:
             if k in cache:
                 print ('{:>12}\t\t{:>12}'.format(socket.inet_ntoa(struct.pack('!I',k)),':'.join(['{:02X}'.format(b) for b in cache[k]])))
-
 
 
 def processARPRequest(data:bytes,MAC:bytes)->None:
@@ -313,7 +311,6 @@ def ARPResolution(ip:int) -> bytes:
     with globalLock:
         awaitingResponse = True
         requestedIP = ip
-        print("Resol")
 
     
     arpR = createARPRequest(ip)

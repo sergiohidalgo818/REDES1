@@ -12,6 +12,7 @@ from fcntl import ioctl
 import subprocess
 SIOCGIFMTU = 0x8921
 SIOCGIFNETMASK = 0x891b
+IPID=0
 #Diccionario de protocolos. Las claves con los valores numéricos de protocolos de nivel superior a IP
 #por ejemplo (1, 6 o 17) y los valores son los nombres de las funciones de callback a ejecutar.
 protocols={}
@@ -93,7 +94,6 @@ def getDefaultGW(interface):
 
 
 
-
 def process_IP_datagram(us,header,data,srcMac):
     '''
         Nombre: process_IP_datagram
@@ -101,12 +101,12 @@ def process_IP_datagram(us,header,data,srcMac):
             Se ejecuta una vez por cada trama Ethernet recibida con Ethertype 0x0800
             Esta función debe realizar, al menos, las siguientes tareas:
                 -Extraer los campos de la cabecera IP (includa la longitud de la cabecera)
-                -Calcular el checksum y comprobar que es correcto                    
+                -Calcular el checksum sobre los bytes de la cabecera IP
+                    -Comprobar que el resultado del checksum es 0. Si es distinto el datagrama se deja de procesar
                 -Analizar los bits de de MF y el offset. Si el offset tiene un valor != 0 dejar de procesar el datagrama (no vamos a reensamblar)
                 -Loggear (usando logging.debug) el valor de los siguientes campos:
                     -Longitud de la cabecera IP
                     -IPID
-                    -TTL
                     -Valor de las banderas DF y MF
                     -Valor de offset
                     -IP origen y destino
@@ -124,6 +124,7 @@ def process_IP_datagram(us,header,data,srcMac):
         Retorno: Ninguno
     '''
 
+
     ihl = bytes([data[0] & int.from_bytes(b'\x0f', "big")])
     ipid = data[4:6]
     df = bytes([data[6] & int.from_bytes(b'\x40', "big")])
@@ -134,33 +135,24 @@ def process_IP_datagram(us,header,data,srcMac):
     IPorg = data[12:16]
     IPdest = data[16:20]
 
+
+
     suma = data[:10] + bytes([0x00, 0x00]) + data[12:]
 
-    if (chksum(suma).to_bytes(2, "big") != data[10:12]):
-        return
-    
-    if offset!=0:
-        return
+    logging.debug("\nLongitud de la cabecera IP: " + str(int.from_bytes(ihl,"big")*4))
+    logging.debug("IPID: " + str(int.from_bytes(ipid,"big")))
+    logging.debug("TTL: " + str(int.from_bytes(tlive,"big")))
+    logging.debug("DF: " + str(int.from_bytes(df,"big")))
+    logging.debug("MF: " + str(int.from_bytes(mf,"big")))
+    logging.debug("Offset: " + str(int.from_bytes(offset,"big")))
+    logging.debug("IP origen: " + '.'.join(['{:02d}'.format(b) for b in IPorg]))
+    logging.debug("IP destino: " + '.'.join(['{:02d}'.format(b) for b in IPdest]))
+    logging.debug("Protocolo: " + str(int.from_bytes(proto,"big")))
 
-    logging.debug("Longitud de la cabecera IP: " + ihl)
-    logging.debug("IPID: " + ipid)
-    logging.debug("TTL: " + tlive)
-    logging.debug("DF: " + df)
-    logging.debug("MF: " + mf)
-    logging.debug("Offset: " + offset)
-    logging.debug("IP origen: " + IPorg)
-    logging.debug("IP destino: " + IPdest)
-    logging.debug("Protocolo: " + proto)
 
-    protocol = int.from_bytes(proto, "big")
-    
-    if not protocol in upperProtos:
-        return
-    
-    f = upperProtos[protocol]
-    
-    f(us, header, data[int.from_bytes(data[2:4], "big"):], IPorg)
-    
+    proto = int.from_bytes(proto, 'big')
+    if proto in protocols.keys():
+        protocols[proto](us, header, data[ihl*4:], IPorg)
 
 
 def registerIPProtocol(callback,protocol):
@@ -184,12 +176,12 @@ def registerIPProtocol(callback,protocol):
             -protocol: valor del campo protocolo de IP para el cuál se quiere registrar una función de callback.
         Retorno: Ninguno 
     '''
-    global upperProtos
+    global protocols
+    protocols[protocol] = callback
 
-    upperProtos[struct.unpack('h',protocol)] = callback
 
 def initIP(interface,opts=None):
-    global myIP, MTU, netmask, defaultGW, ipOpts, IPID
+    global myIP, MTU, netmask, defaultGW,ipOpts, defaultMac
     '''
         Nombre: initIP
         Descripción: Esta función inicializará el nivel IP. Esta función debe realizar, al menos, las siguientes tareas:
@@ -201,27 +193,33 @@ def initIP(interface,opts=None):
                 -Gateway por defecto
             -Almacenar el valor de opts en la variable global ipOpts
             -Registrar a nivel Ethernet (llamando a registerCallback) la función process_IP_datagram con el Ethertype 0x0800
-            -Inicializar el valor de IPID con el número de pareja
         Argumentos:
             -interface: cadena de texto con el nombre de la interfaz sobre la que inicializar ip
             -opts: array de bytes con las opciones a nivel IP a incluir en los datagramas o None si no hay opciones a añadir
         Retorno: True o False en función de si se ha inicializado el nivel o no
     '''
 
-    if (initARP(interface) == -1):
+    # Inicializar ARP
+    if initARP(interface):
         return False
-    
+
+    # Obtener campos para inicializar y almacenar en las variables globales
     myIP = getIP(interface)
     MTU = getMTU(interface)
     netmask = getNetmask(interface)
     defaultGW = getDefaultGW(interface)
-
+    defaultMac = ARPResolution(defaultGW)
+    """print("Default mac:")
+    for i in bytearray(defaultMac):
+        print(hex(i) + ":", end="")
+    print()"""
+    # guardamos las opciones
     ipOpts = opts
 
+    # Registramos el proceso IP
     registerCallback(process_IP_datagram, bytes([0x08,0x00]))
 
-    IPID = 0
-
+    return True
 
 def sendIPDatagram(dstIP,data,protocol):
     global IPID, ipOpts
@@ -285,7 +283,7 @@ def sendIPDatagram(dstIP,data,protocol):
     if len(data) > (MTU - longhead):
 
         
-        newdatalen= MTU - (MTU-longhead %8)
+        newdatalen= MTU - longhead
 
         datanum= math.ceil(len(data)/newdatalen)
 
@@ -378,3 +376,4 @@ def sendIPDatagram(dstIP,data,protocol):
     print("Datagrama IP enviado")
 
     return True
+
