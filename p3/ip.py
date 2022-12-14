@@ -12,7 +12,6 @@ from fcntl import ioctl
 import subprocess
 SIOCGIFMTU = 0x8921
 SIOCGIFNETMASK = 0x891b
-IPID=0
 #Diccionario de protocolos. Las claves con los valores numéricos de protocolos de nivel superior a IP
 #por ejemplo (1, 6 o 17) y los valores son los nombres de las funciones de callback a ejecutar.
 protocols={}
@@ -176,12 +175,12 @@ def registerIPProtocol(callback,protocol):
             -protocol: valor del campo protocolo de IP para el cuál se quiere registrar una función de callback.
         Retorno: Ninguno 
     '''
-    global protocols
-    protocols[protocol] = callback
+    global upperProtos
 
+    upperProtos[struct.unpack('h',protocol)] = callback
 
 def initIP(interface,opts=None):
-    global myIP, MTU, netmask, defaultGW,ipOpts, defaultMac
+    global myIP, MTU, netmask, defaultGW, ipOpts, IPID
     '''
         Nombre: initIP
         Descripción: Esta función inicializará el nivel IP. Esta función debe realizar, al menos, las siguientes tareas:
@@ -193,33 +192,29 @@ def initIP(interface,opts=None):
                 -Gateway por defecto
             -Almacenar el valor de opts en la variable global ipOpts
             -Registrar a nivel Ethernet (llamando a registerCallback) la función process_IP_datagram con el Ethertype 0x0800
+            -Inicializar el valor de IPID con el número de pareja
         Argumentos:
             -interface: cadena de texto con el nombre de la interfaz sobre la que inicializar ip
             -opts: array de bytes con las opciones a nivel IP a incluir en los datagramas o None si no hay opciones a añadir
         Retorno: True o False en función de si se ha inicializado el nivel o no
     '''
 
-    # Inicializar ARP
-    if initARP(interface):
+    if (initARP(interface) == -1):
         return False
-
-    # Obtener campos para inicializar y almacenar en las variables globales
+    
     myIP = getIP(interface)
     MTU = getMTU(interface)
     netmask = getNetmask(interface)
     defaultGW = getDefaultGW(interface)
-    defaultMac = ARPResolution(defaultGW)
-    """print("Default mac:")
-    for i in bytearray(defaultMac):
-        print(hex(i) + ":", end="")
-    print()"""
-    # guardamos las opciones
+
     ipOpts = opts
 
-    # Registramos el proceso IP
     registerCallback(process_IP_datagram, bytes([0x08,0x00]))
 
+    IPID = 0
+
     return True
+
 
 def sendIPDatagram(dstIP,data,protocol):
     global IPID, ipOpts
